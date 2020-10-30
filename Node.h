@@ -7,12 +7,13 @@
 #include <QColor>
 #include "Socket.h"
 
+#include "Serializable.h"
 #include "GraphicsNode.h"
 
-class Node
+class Node : public Serializable
 {
 public:
-    Node(const QString &title);
+    Node(const QString &title = QString());
 
     void setPosition(int x, int y);
     QPoint getPosition();
@@ -61,6 +62,12 @@ public:
     }
 
     void updateConnectedEdges();
+
+    virtual QJsonObject serialize() override;
+    virtual Node* deserialize(const QJsonObject, NodeScene *ns) override;
+
+    void addSocket(Socket *socket);
+    QPoint getSocketPositionFromLocation(Location location);
 private:
     QString title;
     QPoint pos;
@@ -70,6 +77,7 @@ private:
     QVector<Socket*> outputs;
 
     GraphicsNode *graphicsNode;
+    QString id;
 };
 
 #endif // NODE_H

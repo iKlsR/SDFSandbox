@@ -4,18 +4,33 @@
 #include <QGraphicsItem>
 #include <QPainter>
 
-class GraphicsSocket : public QGraphicsRectItem
+class GraphicsNode;
+
+class GraphicsSocket : public QGraphicsItem
 {
 public:
-    GraphicsSocket(QGraphicsItem *parent);
+    GraphicsSocket(GraphicsNode *parent);
 
     QRectF boundingRect() const override;
     void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) override;
-    void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+
+    enum { Type = UserType + 2 };
+    int type() const override {
+        return Type;
+    }
+
+    int getIndex() { return index; }
+    void setIndex(int i) {
+        index = i;
+    }
+
+    GraphicsNode *parent;
 
 private:
     qreal radius;
     int outlineWidth;
+    int padding;
+    int index;
 };
 
 #endif // GRAPHICSSOCKET_H

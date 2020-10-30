@@ -31,6 +31,7 @@ HEADERS += \
     MainWindow.h \
     Node.h \
     NodeScene.h \
+    Serializable.h \
     Socket.h
 
 # Default rules for deployment.

@@ -9,6 +9,12 @@
     #include <QDebug>
 #endif
 
+#include "NodeScene.h"
+#include "GraphicsSocket.h"
+#include "Edge.h"
+#include "Node.h"
+#include "GraphicsEdge.h"
+
 Canvas::Canvas(QWidget *parent) : QGraphicsView(parent)
 {
     setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
@@ -17,9 +23,10 @@ Canvas::Canvas(QWidget *parent) : QGraphicsView(parent)
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    setCacheMode(QGraphicsView::CacheBackground);
+//    setCacheMode(QGraphicsView::CacheBackground);
 
     installEventFilter(this);
+//    setMouseTracking(true);
 
     // Grimey!
     zoomInFactor = 1.25;
@@ -29,20 +36,94 @@ Canvas::Canvas(QWidget *parent) : QGraphicsView(parent)
     zoomRange = {5, 16};
 
 //    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    nodeOp = NodeOperation::NoOp;
 }
 
 Canvas::~Canvas()
 {
-//    delete graphicsScene;
+    //    delete graphicsScene;
+}
+
+void Canvas::setNodeScene(NodeScene *ns)
+{
+    nodeScene = ns;
+    setScene(nodeScene->graphicsScene);
+}
+
+int Canvas::getItemAtClick(QMouseEvent *event)
+{
+    // Get the entity currently under the cursor
+    auto item = itemAt(event->pos());
+    // https://doc.qt.io/archives/qt-4.8/qgraphicsitem.html#type
+    // https://stackoverflow.com/a/23129179
+    // We are looking for sockets whose type is UserType + 2
+    if (item) return item->type();
+    return -1;
+}
+
+void Canvas::edgeDragStart(GraphicsSocket *item)
+{
+    nodeOp = NodeOperation::EdgeDrag;
+//    qDebug() << item->parent->getModel()->getTitle();
+    qDebug() << item->getIndex();
+
+
+    auto startingSocket = item->parent->getModel()->getOutputSockets().at(item->getIndex());
+////    auto endSocket = nodeScene->nodes.last()->getInputSockets().first();
+
+    tempDraggingEdge = new Edge(startingSocket, nullptr);
+    tempDraggingEdge->setRenderer(new GraphicsEdge(nullptr));
+    scene()->addItem(tempDraggingEdge->getRenderer());
+}
+
+void Canvas::edgeDragEnd(GraphicsSocket *item)
+{
+    nodeOp = NodeOperation::NoOp;
+    qDebug() << item;
+//    auto endSocket = nodeScene->nodes.last()->getInputSockets().first();
+
+    auto endSocket = item->parent->getModel()->getInputSockets().at(item->getIndex());
+    nodeScene->connectEdgeToSocket(tempDraggingEdge, endSocket);
+}
+
+void Canvas::clearNodeScene()
+{
+    return;
 }
 
 void Canvas::mousePressEvent(QMouseEvent *event)
 {
+    if (event->button() == Qt::LeftButton) {
+        if (getItemAtClick(event) == QGraphicsItem::UserType + 2) {
+            if (nodeOp == NodeOperation::NoOp) {
+                edgeDragStart(qgraphicsitem_cast<GraphicsSocket*>(itemAt(event->pos())));
+                return;
+            }
+        }
+    }
+
     QGraphicsView::mousePressEvent(event);
 }
 
 void Canvas::mouseReleaseEvent(QMouseEvent *event)
 {
+    // If we don't complete a node edge Dnd then reset nodeOp
+    if (event->button() == Qt::LeftButton) {
+        if (getItemAtClick(event) == QGraphicsItem::UserType + 2) {
+            if (nodeOp == NodeOperation::EdgeDrag) {
+                edgeDragEnd(qgraphicsitem_cast<GraphicsSocket*>(itemAt(event->pos())));
+                return;
+            }
+        } else {
+            if (nodeOp == NodeOperation::EdgeDrag) {
+                nodeOp = NodeOperation::NoOp;
+                delete tempDraggingEdge;
+                scene()->removeItem(tempDraggingEdge->getRenderer());
+                return;
+            }
+        }
+    }
+
     if (event->button() == Qt::MiddleButton) {
         setDragMode(QGraphicsView::NoDrag);
     } else {
@@ -52,6 +133,12 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
 
 void Canvas::mouseMoveEvent(QMouseEvent *event)
 {
+    if (nodeOp == NodeOperation::EdgeDrag) {
+        auto edgeEnd = mapToScene(event->pos()).toPoint();
+        tempDraggingEdge->graphicsEdge->setDest(edgeEnd);
+        tempDraggingEdge->graphicsEdge->update();
+    }
+
     QGraphicsView::mouseMoveEvent(event);
 }
 

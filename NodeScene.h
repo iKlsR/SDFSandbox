@@ -1,6 +1,7 @@
 #ifndef NODESCENE_H
 #define NODESCENE_H
 
+#include <QJsonArray>
 #include <QVector>
 
 #include "GraphicsScene.h"
@@ -9,11 +10,16 @@
 #include "GraphicsEdge.h"
 #include "Node.h"
 #include "Edge.h"
+#include "Serializable.h"
 
-class NodeScene
+class NodeScene : public Serializable
 {
 public:
     NodeScene();
+
+    QVector<Node*> nodes;
+    QMap<QString, Socket*> sockets;
+    QVector<Edge*> edges;
 
     void addNode(Node*);
     void removeNode(Node*);
@@ -26,14 +32,15 @@ public:
     QGraphicsScene *graphicsScene;
 
     void recalculateTargets();
+    void connectEdgeToSocket(Edge *E, Socket *S);
+
+    virtual QJsonObject serialize() override;
+    virtual NodeScene* deserialize(QJsonObject, NodeScene*) override;
+
 private:
-    QVector<Node> nodes;
-    QVector<Socket*> sockets;
-    QVector<Edge*> edges;
-
-
     int sceneWidth = 64000;
     int sceneHeight = 64000;
+    QString id;
 };
 
 #endif // NODESCENE_H

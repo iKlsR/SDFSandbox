@@ -1,5 +1,7 @@
 #include "Node.h"
 #include <QDebug>
+#include <QJsonArray>
+#include <QJsonObject>
 #include "Socket.h"
 #include "Edge.h"
 
@@ -7,6 +9,7 @@ Node::Node(const QString &t) : title(t)
 {
     pos = QPoint(0, 0);
     setDimensions(QSize(100, 100));
+    id = QUuid::createUuid().toString(QUuid::WithoutBraces);
 }
 
 void Node::setPosition(int x, int y)
@@ -30,6 +33,47 @@ QPoint Node::getPosition()
     return pos;
 }
 
+QJsonObject Node::serialize()
+{
+    QJsonArray inputList, outputList;
+    foreach (auto input, inputs) inputList.append(input->serialize());
+    foreach (auto output, outputs) outputList.append(output->serialize());
+
+    QVariantMap map;
+    map.insert("id", id);
+    map.insert("title", title);
+    map.insert("pos_x", getPosition().x());
+    map.insert("pos_y", getPosition().y());
+    map.insert("inputs", inputList);
+    map.insert("outputs", outputList);
+
+    return QJsonObject::fromVariantMap(map);
+}
+
+Node* Node::deserialize(const QJsonObject object, NodeScene *nodeScene)
+{
+    id = object.value("id").toString();
+    title = object.value("title").toString();
+    setPosition(object.value("pos_x").toInt(), object.value("pos_y").toInt());
+//    setColor(QColor("#F56565"));
+
+    foreach (auto input, object.value("inputs").toArray()) {
+        auto socket = new Socket(this);
+        socket->deserialize(input.toObject(), nodeScene);
+        addSocket(socket);
+//        addSocket(Type::IN, static_cast<Location>(input.toObject().value("location").toInt()));
+    }
+
+    foreach (auto output, object.value("outputs").toArray()) {
+        auto socket = new Socket(this);
+        socket->deserialize(output.toObject(), nodeScene);
+        addSocket(socket);
+//        addSocket(Type::OUT, static_cast<Location>(output.toObject().value("location").toInt()));
+    }
+
+    return this;
+}
+
 QVector<Socket*> Node::getInputSockets()
 {
     return inputs;
@@ -45,7 +89,18 @@ const QString Node::getTitle()
     return title;
 }
 
-void Node::addSocket(Type type, Location location)
+void Node::addSocket(Socket *socket)
+{
+    socket->setLocalSocketPosition(getSocketPositionFromLocation(socket->location));
+
+    if (socket->type == Type::IN) {
+        inputs.append(socket);
+    } else {
+        outputs.append(socket);
+    }
+}
+
+QPoint Node::getSocketPositionFromLocation(Location location)
 {
     int socketX, socketY;
 
@@ -76,20 +131,29 @@ void Node::addSocket(Type type, Location location)
             break;
     }
 
+    return QPoint(socketX, socketY);
+}
+
+void Node::addSocket(Type type, Location location)
+{
     auto socket = new Socket(this);
     socket->setLocation(location);
-    socket->setLocalSocketPosition(QPoint(socketX, socketY));
+    socket->setLocalSocketPosition(getSocketPositionFromLocation(location));
 
     if (type == Type::IN) {
+        socket->type = Type::IN;
+        socket->index = inputs.length();
         inputs.append(socket);
     } else {
+        socket->type = Type::OUT;
+        socket->index = outputs.length();
         outputs.append(socket);
     }
 }
 
 void Node::updateConnectedEdges()
 {
-    for (auto socket : inputs + outputs) {
+    foreach (auto socket, inputs + outputs) {
         if (socket->hasEdge()) socket->getEdge()->updateWorldPosition();
     }
 }

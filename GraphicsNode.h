@@ -15,6 +15,11 @@ class GraphicsNode : public QGraphicsItem
 public:
     GraphicsNode();
 
+    enum { Type = UserType + 1 };
+    int type() const override {
+        return Type;
+    }
+
     void setTitle(QString titleText);
     void setColor(QColor);
 

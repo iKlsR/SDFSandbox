@@ -103,6 +103,10 @@ void GraphicsNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 
 void GraphicsNode::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (model) model->update();
+    if (model) {
+        model->setPosition(scenePos().x(), scenePos().y());
+        model->update();
+    }
+
     QGraphicsItem::mouseMoveEvent(event);
 }

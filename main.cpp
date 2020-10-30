@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     QString workingDir = QApplication::applicationDirPath();
 
     QRect windowSize(QGuiApplication::primaryScreen()->availableGeometry());
-    windowSize.adjust(200, 200, -200, -200);
+    windowSize.adjust(200, 50, -200, -300);
 
 // Let's have a nicer font on Windows and *Nix
 #if defined(Q_OS_WIN) || defined(Q_OS_UNIX)

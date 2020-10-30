@@ -1,17 +1,21 @@
 #include "GraphicsSocket.h"
 
-GraphicsSocket::GraphicsSocket(QGraphicsItem *parent) : QGraphicsRectItem(parent)
+#include "GraphicsNode.h"
+
+GraphicsSocket::GraphicsSocket(GraphicsNode *p) : QGraphicsItem(p), parent(p)
 {
-    radius = 5;
+    radius = 8;
     outlineWidth = 2;
+    padding = 2; // Make it easier to select
+    setZValue(2);
 }
 
 QRectF GraphicsSocket::boundingRect() const
 {
    return QRectF(-radius - outlineWidth,
                  -radius - outlineWidth,
-                 (radius + outlineWidth) * 2,
-                 (radius + outlineWidth) * 2).normalized();
+                 padding + (radius + outlineWidth) * outlineWidth,
+                 padding + (radius + outlineWidth) * outlineWidth).normalized();
 }
 
 void GraphicsSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -25,11 +29,6 @@ void GraphicsSocket::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
     painter->setPen(pen);
     painter->setBrush(QBrush(QColor("#68D391")));
     painter->drawEllipse(-radius, -radius, radius * 2, radius * 2);
-}
 
-#include <QDebug>
-void GraphicsSocket::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
-{
-    qDebug() << "yes";
-    QGraphicsRectItem::hoverEnterEvent(event);
+//    painter->drawRect(this->boundingRect());
 }
