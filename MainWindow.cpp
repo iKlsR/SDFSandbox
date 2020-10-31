@@ -12,58 +12,53 @@
 #include "Node.h"
 #include "Socket.h"
 
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
+    windowSplit = new QSplitter(Qt::Horizontal, this);
+    windowSplit->setHandleWidth(1);
+
     QMenuBar bar;
     bar.addAction("save");
     setMenuBar(&bar);
-
 
     auto scene = new NodeScene;
 
     nodeEditorCanvas = new Canvas(this);
     nodeEditorCanvas->setNodeScene(scene);
 
-    auto A = new Node("Red");
-    A->setPosition(-300, -70);
+    renderer = new Renderer(this);
+
+    QSizePolicy policy;
+    renderer->setSizePolicy(policy);
+//    policy.setHorizontalPolicy(QSizePolicy::Expanding);
+    windowSplit->addWidget(nodeEditorCanvas);
+    windowSplit->addWidget(renderer);
+    windowSplit->setSizes(QList<int>({50, 50}));
+//    windowSplit->setStretchFactor(0, 2);
+//    windowSplit->setStretchFactor(1, 11);
+
+    auto A = new Node("Input");
+    A->setPosition(-200, 0);
     A->setColor(QColor("#F56565"));
-    A->addSocket(Type::OUT, Location::RIGHT_MIDDLE);
-    A->addSocket(Type::OUT, Location::RIGHT_BOTTOM);
+    A->addSocket(Type::OUTO, Location::RIGHT_MIDDLE);
+    scene->addNode(A);
 
-    auto B = new Node("Indigo");
+    auto B = new Node("Output");
+    A->setPosition(600, 0);
     B->setColor(QColor("#9F7AEA"));
-    B->addSocket(Type::IN, Location::LEFT_MIDDLE);
-    B->addSocket(Type::OUT, Location::RIGHT_MIDDLE);
+    B->addSocket(Type::INTO, Location::LEFT_MIDDLE);
 
-    auto C = new Node("Blue");
-    C->setPosition(200, -50);
-    C->addSocket(Type::IN, Location::LEFT_MIDDLE);
-    C->addSocket(Type::IN, Location::LEFT_BOTTOM);
+    scene->addNode(B);
 
-    auto D = new Node("Green");
-    D->setColor(QColor("#48BB78"));
-    D->setPosition(50, -150);
-    D->addSocket(Type::IN, Location::LEFT_MIDDLE);
-    D->addSocket(Type::OUT, Location::RIGHT_MIDDLE);
-
-//    scene->addNode(A);
-//    scene->addNode(B);
-//    scene->addNode(C);
-//    scene->addNode(D);
-
-//    scene->connectSockets(A->getSocketByIndex(Type::OUT, 0), B->getSocketByIndex(Type::IN, 0));
-//    scene->connectSockets(A->getSocketByIndex(Type::OUT, 1), D->getSocketByIndex(Type::IN, 0));
-//    scene->connectSockets(B->getSocketByIndex(Type::OUT, 0), C->getSocketByIndex(Type::IN, 0));
-//    scene.connectSockets(D->getSocketByIndex(Type::OUT, 0), C->getSocketByIndex(Type::IN, 1));
-//    scene.connectSockets(A->getSocketByIndex(Type::OUT, 0), C->getSocketByIndex(Type::IN, 0));
-//    scene.connectSockets(D->getSocketByIndex(Type::OUT, 0), B->getSocketByIndex(Type::IN, 0));
+    scene->connectSockets(A->getSocketByIndex(Type::OUTO, 0), B->getSocketByIndex(Type::INTO, 0));
 
     setMouseTracking(true);
-//    setFocusPolicy(Qt::ClickFocus);
+    setFocusPolicy(Qt::ClickFocus);
     installEventFilter(this);
 
     setContentsMargins(0, 0, 0, 0);
-    setCentralWidget(nodeEditorCanvas);
+    setCentralWidget(windowSplit);
 }
 
 MainWindow::~MainWindow()
@@ -95,6 +90,17 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             auto scene = new NodeScene;
             scene->deserialize(json.object(), nullptr);
             nodeEditorCanvas->setNodeScene(scene);
+        }
+
+        if (keyEvent->key() == Qt::Key_Space) {
+            // https://stackoverflow.com/questions/43831474/how-to-equally-distribute-the-width-of-qsplitter
+            if (toggleRatio) {
+                windowSplit->setSizes(QList<int>({50, 50}));
+                toggleRatio = false;
+            } else {
+                windowSplit->setSizes(QList<int>({70, 30}));
+                toggleRatio = true;
+            }
         }
     }
 

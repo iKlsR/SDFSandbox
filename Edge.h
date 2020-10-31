@@ -3,6 +3,8 @@
 
 #include <QPoint>
 
+#include "Serializable.h"
+
 enum class EdgeType {
     STRAIGHT,
     BEZIER,
@@ -12,9 +14,10 @@ enum class EdgeType {
 class Socket;
 class GraphicsEdge;
 
-class Edge
+class Edge : public Serializable
 {
 public:
+    Edge();
     Edge(Socket*, Socket*);
     QPoint source;
     QPoint dest;
@@ -29,6 +32,11 @@ public:
 
     Socket *A;
     Socket *B;
+
+    virtual QJsonObject serialize() override;
+    virtual Edge* deserialize(QJsonObject, NodeScene*) override;
+
+    QString id;
 };
 
 #endif // EDGE_H

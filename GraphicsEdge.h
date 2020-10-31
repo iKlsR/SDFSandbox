@@ -9,6 +9,11 @@ class GraphicsEdge : public QGraphicsPathItem
 public:
     GraphicsEdge(QGraphicsItem *parent);
 
+    enum { Type = UserType + 3 };
+    int type() const override {
+        return Type;
+    }
+
     void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) override;
 
     void updatePath();

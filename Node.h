@@ -34,7 +34,7 @@ public:
     const QString getTitle();
 
     Socket *getSocketByIndex(Type type, int index) {
-        if (type == Type::IN) {
+        if (type == Type::INTO) {
             return inputs.at(index);
         } else {
             return outputs.at(index);

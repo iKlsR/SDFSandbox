@@ -1,10 +1,12 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 
-enum class Type {
-    IN = 0,
-    OUT
-};
+#include <QPoint>
+#include <QDebug>
+#include "Serializable.h"
+
+class Node;
+class Edge;
 
 enum class Location {
     LEFT_TOP = 0,
@@ -15,12 +17,11 @@ enum class Location {
     RIGHT_BOTTOM
 };
 
-#include <QPoint>
+enum class Type {
+    INTO = 0,
+    OUTO
+};
 
-class Node;
-class Edge;
-#include <QDebug>
-#include "Serializable.h"
 class Socket : public Serializable
 {
 public:
@@ -36,16 +37,19 @@ public:
     Node *getParent() {
         return parent;
     }
-    void setEdge(Edge*e) {
-        edge = e;
+    void addEdge(Edge *e) {
+        edges.append(e);
     }
-    Edge *getEdge() {
-        return edge;
+
+    QVector<Edge*> getEdges() {
+        return edges;
     }
+
     QPoint getSocketGlobalPosition();
     bool hasEdge();
-    Edge *edge;
     QString id;
+
+    QVector<Edge*> edges;
 
     virtual QJsonObject serialize() override;
     virtual Socket* deserialize(QJsonObject, NodeScene*) override;

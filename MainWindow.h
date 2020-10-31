@@ -1,10 +1,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "Renderer.h"
+
 #include <QMainWindow>
+#include <QSplitter>
 
 #include "Canvas.h"
 class NodeScene;
+
 
 class MainWindow : public QMainWindow
 {
@@ -20,5 +24,8 @@ protected:
 private:
     Canvas *nodeEditorCanvas;
     NodeScene *scene;
+    QSplitter *windowSplit;
+    Renderer *renderer;
+    bool toggleRatio = false;
 };
 #endif // MAINWINDOW_H

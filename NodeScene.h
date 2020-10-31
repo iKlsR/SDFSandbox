@@ -40,6 +40,7 @@ public:
 private:
     int sceneWidth = 64000;
     int sceneHeight = 64000;
+    int zoomLevel = 10;
     QString id;
 };
 

@@ -21,7 +21,8 @@ GraphicsScene::GraphicsScene(QObject *parent) : QGraphicsScene(parent)
     secondaryGridPen = QPen("#292929");
     secondaryGridPen.setWidth(2);
 
-    sceneWidth= sceneHeight = 64000;
+    sceneWidth = 8000;
+    sceneHeight = 4000;
     gridSpacing = 20, tileSize = 100;
 
     setSceneRect(-sceneWidth / 2, -sceneHeight / 2, sceneWidth, sceneHeight);

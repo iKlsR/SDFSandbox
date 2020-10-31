@@ -1,13 +1,13 @@
 #include "Socket.h"
 #include "Node.h"
 #include "Edge.h"
-
+#include "NodeScene.h"
 #include <QDebug>
 #include <QJsonObject>
 
 Socket::Socket(Node *p) : parent(p)
 {
-    edge = nullptr;
+//    edges.reserve(8);
     id = QUuid::createUuid().toString(QUuid::WithoutBraces);
 }
 
@@ -28,11 +28,20 @@ QJsonObject Socket::serialize()
 
 Socket* Socket::deserialize(QJsonObject object, NodeScene *nodeScene)
 {
-//    parent = nullptr;
+//    QString startingSocketId = object.value("start").toString();
+//    QString endingSocketId = object.value("end").toString();
+
+//    A = nodeScene->sockets.take(startingSocketId);
+
+//    parent = nodeScene->nodes.last();
+//    qDebug() << nodeScene;
+    edges.reserve(8);
+
     id = object.value("id").toString();
     index = object.value("index").toInt();
     type = static_cast<Type>(object.value("type").toInt());
     location = static_cast<Location>(object.value("location").toInt());
+
     return this;
 }
 
@@ -42,7 +51,8 @@ void Socket::setLocalSocketPosition(QPoint pos)
 }
 
 bool Socket::hasEdge() {
-    return edge != nullptr;
+//    return edge != nullptr;
+    return edges.count();
 }
 
 QPoint Socket::getSocketLocalPosition()

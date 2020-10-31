@@ -4,11 +4,18 @@
 #include "Node.h"
 #include "GraphicsEdge.h"
 #include "GraphicsNode.h"
+#include "NodeScene.h"
+
+Edge::Edge()
+{
+
+}
 
 Edge::Edge(Socket *a, Socket *b) : A(a), B(b)
 {
-    A->setEdge(this);
-    if (B) B->setEdge(this);
+    id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    A->addEdge(this);
+    if (B) B->addEdge(this);
 }
 
 void Edge::setRenderer(GraphicsEdge *gEdge) {
@@ -18,17 +25,46 @@ void Edge::setRenderer(GraphicsEdge *gEdge) {
     updateWorldPosition();
 }
 
+QJsonObject Edge::serialize()
+{
+    QVariantMap map;
+    map.insert("id", id);
+    map.insert("start", A->id);
+    map.insert("end", B->id);
+    return QJsonObject::fromVariantMap(map);
+}
+
+Edge* Edge::deserialize(QJsonObject object, NodeScene *nodeScene)
+{
+    id = object.value("id").toString();
+
+    QString startingSocketId = object.value("start").toString();
+    QString endingSocketId = object.value("end").toString();
+
+    A = nodeScene->sockets.value(startingSocketId);
+    B = nodeScene->sockets.value(endingSocketId);
+
+    A->addEdge(this);
+    B->addEdge(this);
+
+    return this;
+}
+
 GraphicsEdge *Edge::getRenderer() {
     return graphicsEdge;
 }
 
 void Edge::updateWorldPosition()
 {
-    auto socketAPos = A->getParent()->getRenderer()->pos().toPoint() + A->getSocketLocalPosition();
-    auto socketBPos = B->getParent()->getRenderer()->pos().toPoint() + B->getSocketLocalPosition();
+    if (A) {
+        source = A->getParent()->getRenderer()->pos().toPoint() + A->getSocketLocalPosition();
+        graphicsEdge->setSource(source);
+    }
 
-//    qDebug() << "AAAAAAAAAAAAAAAAAAA" << socketAPos;
-
-    graphicsEdge->setSource(socketAPos);
-    graphicsEdge->setDest(socketBPos);
+    if (B) {
+        dest = B->getParent()->getRenderer()->pos().toPoint() + B->getSocketLocalPosition();
+        graphicsEdge->setDest(dest);
+    } else {
+        graphicsEdge->setDest(source);
+    }
 }

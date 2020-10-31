@@ -5,6 +5,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QFontDatabase>
 #include <QDebug>
+#include <QStyleOptionGraphicsItem>
 
 #include "Node.h"
 
@@ -70,6 +71,8 @@ void GraphicsNode::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 {
     Q_UNUSED(option);
     Q_UNUSED(widget);
+
+//    painter->setClipRect(option->exposedRect);
 
     headerBrush.setColor(headerColor);
 

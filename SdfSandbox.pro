@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -18,6 +18,7 @@ SOURCES += \
     MainWindow.cpp \
     Node.cpp \
     NodeScene.cpp \
+    Renderer.cpp \
     Socket.cpp \
     main.cpp
 
@@ -31,6 +32,7 @@ HEADERS += \
     MainWindow.h \
     Node.h \
     NodeScene.h \
+    Renderer.h \
     Serializable.h \
     Socket.h
 
@@ -42,3 +44,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 DISTFILES += \
     editor.theme \
     readme.md
+
+RESOURCES += \
+    shaders.qrc

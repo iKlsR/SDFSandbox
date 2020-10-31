@@ -61,14 +61,14 @@ Node* Node::deserialize(const QJsonObject object, NodeScene *nodeScene)
         auto socket = new Socket(this);
         socket->deserialize(input.toObject(), nodeScene);
         addSocket(socket);
-//        addSocket(Type::IN, static_cast<Location>(input.toObject().value("location").toInt()));
+//        addSocket(Type::INTO, static_cast<Location>(input.toObject().value("location").toInt()));
     }
 
     foreach (auto output, object.value("outputs").toArray()) {
         auto socket = new Socket(this);
         socket->deserialize(output.toObject(), nodeScene);
         addSocket(socket);
-//        addSocket(Type::OUT, static_cast<Location>(output.toObject().value("location").toInt()));
+//        addSocket(Type::OUTO, static_cast<Location>(output.toObject().value("location").toInt()));
     }
 
     return this;
@@ -93,7 +93,7 @@ void Node::addSocket(Socket *socket)
 {
     socket->setLocalSocketPosition(getSocketPositionFromLocation(socket->location));
 
-    if (socket->type == Type::IN) {
+    if (socket->type == Type::INTO) {
         inputs.append(socket);
     } else {
         outputs.append(socket);
@@ -140,12 +140,12 @@ void Node::addSocket(Type type, Location location)
     socket->setLocation(location);
     socket->setLocalSocketPosition(getSocketPositionFromLocation(location));
 
-    if (type == Type::IN) {
-        socket->type = Type::IN;
+    if (type == Type::INTO) {
+        socket->type = Type::INTO;
         socket->index = inputs.length();
         inputs.append(socket);
     } else {
-        socket->type = Type::OUT;
+        socket->type = Type::OUTO;
         socket->index = outputs.length();
         outputs.append(socket);
     }
@@ -154,7 +154,10 @@ void Node::addSocket(Type type, Location location)
 void Node::updateConnectedEdges()
 {
     foreach (auto socket, inputs + outputs) {
-        if (socket->hasEdge()) socket->getEdge()->updateWorldPosition();
+//        if (socket->hasEdge()) socket->getEdge()->updateWorldPosition();
+        foreach (auto edge, socket->getEdges()) {
+            edge->updateWorldPosition();
+        }
     }
 }
 

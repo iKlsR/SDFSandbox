@@ -5,6 +5,17 @@
 
 #include "GraphicsScene.h"
 
+enum class NodeOperation {
+    NoOp,
+    EdgeDrag,
+    EdgeConnected
+};
+
+class GraphicsSocket;
+class NodeScene;
+class Edge;
+class Socket;
+
 class Canvas : public QGraphicsView
 {
     Q_OBJECT
@@ -16,6 +27,13 @@ public:
 //    GraphicsScene *currentScene() {
 //        return this->graphicsScene;
 //    }
+
+    NodeScene *nodeScene;
+    void setNodeScene(NodeScene* ns);
+    int getItemAtClick(QMouseEvent *event);
+    void edgeDragStart(GraphicsSocket *item);
+    void edgeDragEnd(GraphicsSocket *item);
+    void clearNodeScene();
 
 protected slots:
     void scalingTime(qreal x);
@@ -37,6 +55,10 @@ private:
     bool zoomClamp;
     qreal zoom, zoomStep;
     QVector<int> zoomRange;
+
+    NodeOperation nodeOp;
+
+    Edge *tempDraggingEdge;
 };
 
 #endif // CANVAS_H

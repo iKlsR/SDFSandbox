@@ -47,10 +47,10 @@ void NodeScene::addEdge(Edge *edge)
 QJsonObject NodeScene::serialize()
 {
     QJsonArray nodeList,edgeList;
-    for (auto node : nodes) {
+    foreach (auto node, nodes) {
         nodeList.append(node->serialize());
     }
-    for (auto edge : edges) {
+    foreach (auto edge, edges) {
         edgeList.append(edge->serialize());
     }
 
@@ -97,7 +97,7 @@ void NodeScene::recalculateTargets()
 void NodeScene::connectEdgeToSocket(Edge *E, Socket *S)
 {
     E->B = S;
-    S->setEdge(E);
+    S->addEdge(E);
     edges.append(E);
 }
 

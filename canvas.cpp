@@ -19,11 +19,12 @@ Canvas::Canvas(QWidget *parent) : QGraphicsView(parent)
 {
     setRenderHints(QPainter::Antialiasing | QPainter::HighQualityAntialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
     setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+//    setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
     setStyleSheet("border: 0");
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-//    setCacheMode(QGraphicsView::CacheBackground);
+    setCacheMode(QGraphicsView::CacheBackground);
 
     installEventFilter(this);
 //    setMouseTracking(true);
@@ -102,6 +103,19 @@ void Canvas::mousePressEvent(QMouseEvent *event)
         }
     }
 
+    if (event->button() == Qt::RightButton) {
+        auto pos = mapToScene(event->pos());
+
+        auto node = new Node("Yeet");
+        node->setPosition(pos.x(), pos.y());
+        node->setColor(QColor("#487eb0"));
+        node->addSocket(Type::INTO, Location::LEFT_MIDDLE);
+        node->addSocket(Type::OUTO, Location::RIGHT_MIDDLE);
+//        node->setRenderer(new GraphicsNode);
+
+        nodeScene->addNode(node);
+    }
+
     QGraphicsView::mousePressEvent(event);
 }
 
@@ -117,7 +131,6 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
         } else {
             if (nodeOp == NodeOperation::EdgeDrag) {
                 nodeOp = NodeOperation::NoOp;
-                delete tempDraggingEdge;
                 scene()->removeItem(tempDraggingEdge->getRenderer());
                 return;
             }
@@ -196,25 +209,27 @@ void Canvas::wheelEvent(QWheelEvent *event)
 
 // Qt's graphics view wants to drag with left click only by default, override this
 bool Canvas::eventFilter(QObject *object, QEvent *event) {
+    Q_UNUSED(object);
+
     if (event->type() == QEvent::MouseButtonPress) {
-      QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
+        QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(event);
 
-      if (mouseEvent->button() == Qt::MiddleButton) {
-          // Temporarly enable dragging mode
-          this->setDragMode(QGraphicsView::ScrollHandDrag);
-          // Emit a left mouse click (the default button for the drag mode)
-          QMouseEvent* pressEvent = new QMouseEvent(QEvent::GraphicsSceneMousePress,
-                                    mouseEvent->pos(), Qt::MouseButton::LeftButton,
-                                    Qt::MouseButton::LeftButton, Qt::KeyboardModifier::NoModifier);
+        if (mouseEvent->button() == Qt::MiddleButton) {
+            // Temporarly enable dragging mode
+            this->setDragMode(QGraphicsView::ScrollHandDrag);
+            // Emit a left mouse click (the default button for the drag mode)
+            QMouseEvent* pressEvent = new QMouseEvent(QEvent::GraphicsSceneMousePress,
+                                                      mouseEvent->pos(), Qt::MouseButton::LeftButton,
+                                                      Qt::MouseButton::LeftButton,
+                                                      Qt::KeyboardModifier::NoModifier);
 
-          this->mousePressEvent(pressEvent);
-      }
-      else if (event->type() == QEvent::MouseButtonRelease) {
-        // Disable drag mode if dragging is finished
-        this->setDragMode(QGraphicsView::DragMode::NoDrag);
-      }
+            this->mousePressEvent(pressEvent);
+        }
+        else if (event->type() == QEvent::MouseButtonRelease) {
+            // Disable drag mode if dragging is finished
+            this->setDragMode(QGraphicsView::DragMode::NoDrag);
+        }
     }
 
-  Q_UNUSED(object)
-  return false;
+    return false;
 }
