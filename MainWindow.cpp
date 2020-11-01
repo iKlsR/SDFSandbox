@@ -10,6 +10,7 @@
 #include "GraphicsScene.h"
 #include "NodeScene.h"
 #include "Node.h"
+#include "SceneNode.h"
 #include "Socket.h"
 
 
@@ -38,20 +39,26 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 //    windowSplit->setStretchFactor(0, 2);
 //    windowSplit->setStretchFactor(1, 11);
 
-    auto A = new Node("Input");
+    auto A = new SphereNode;
     A->setPosition(-200, 0);
-    A->setColor(QColor("#F56565"));
-    A->addSocket(Type::OUTO, Location::RIGHT_MIDDLE);
+
+    auto B = new PlaneNode;
+    B->setPosition(-200, 200);
+
+    auto C = new MinNode;
+    C->setPosition(0, 0);
+
+    auto D = new OutputNode;
+    D->setPosition(200, 0);
+
     scene->addNode(A);
-
-    auto B = new Node("Output");
-    A->setPosition(600, 0);
-    B->setColor(QColor("#9F7AEA"));
-    B->addSocket(Type::INTO, Location::LEFT_MIDDLE);
-
     scene->addNode(B);
+    scene->addNode(C);
+    scene->addNode(D);
 
-    scene->connectSockets(A->getSocketByIndex(Type::OUTO, 0), B->getSocketByIndex(Type::INTO, 0));
+    scene->connectSockets(A->getSocketByIndex(Type::OUTO, 0), C->getSocketByIndex(Type::INTO, 0));
+    scene->connectSockets(B->getSocketByIndex(Type::OUTO, 0), C->getSocketByIndex(Type::INTO, 1));
+    scene->connectSockets(C->getSocketByIndex(Type::OUTO, 0), D->getSocketByIndex(Type::INTO, 0));
 
     setMouseTracking(true);
     setFocusPolicy(Qt::ClickFocus);
@@ -101,6 +108,18 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
                 windowSplit->setSizes(QList<int>({70, 30}));
                 toggleRatio = true;
             }
+        }
+
+        if (keyEvent->key() == Qt::Key_R) {
+            auto master = nodeEditorCanvas->nodeScene->getSceneNode();
+            QStringList code;
+            nodeEditorCanvas->nodeScene->walkTree(master, &code);
+            QString lastEvaldFunc = master->eval().first;
+
+            QString sceneFunc = QString("float GetDist(vec3 p) { %1 return %2; }").arg(code.join(""), lastEvaldFunc);
+            qDebug() << sceneFunc;
+
+            renderer->recompileFragShader(sceneFunc);
         }
     }
 

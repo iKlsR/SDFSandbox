@@ -9,10 +9,19 @@ in vec2 TexCoord;
 #define MAX_DIST 100.
 #define SURF_DIST .01
 
+float sphereSDF(vec3 p, vec3 pos, float radius) {
+    return length(p - pos) - radius;
+}
+
+float planeSDF(vec3 p) {
+    return p.y;
+}
+
+//%1
+
 float GetDist(vec3 p) {
-    vec4 s = vec4(0, 1, 6, 1);
-    float sphereDist = length(p - s.xyz) - s.w;
-    float planeDist = p.y;
+    float sphereDist = sphereSDF(p, vec3(0, 1, 6), 1);
+    float planeDist = planeSDF(p);
 
     float d = min(sphereDist, planeDist);
     return d;
@@ -30,6 +39,7 @@ float RayMarch(vec3 ro, vec3 rd) {
     return dO;
 }
 
+out vec4 FragColor;
 
 void main() {
 //    vec2 st = gl_FragCoord.xy / iResolution.xy;
@@ -38,13 +48,13 @@ void main() {
 //    col = vec4(color, 1.0);
 
     vec2 uv = (gl_FragCoord.xy - .5 * iResolution.xy) / iResolution.y;
-   vec3 col = vec3(0);
-   vec3 ro = vec3(0, 1, 0);
-   vec3 rd = normalize(vec3(uv.x, uv.y, 1));
+    vec3 col = vec3(0);
+    vec3 ro = vec3(0, 1, 0);
+    vec3 rd = normalize(vec3(uv.x, uv.y, 1));
 
-   float d = RayMarch(ro, rd);
-   d /= 6.;
-   col = vec3(d);
+    float d = RayMarch(ro, rd);
+    d /= 6.;
+    col = vec3(d);
 
-   gl_FragColor=vec4(col,1.);
+    FragColor = vec4(col, 1.);
 }

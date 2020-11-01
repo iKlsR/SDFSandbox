@@ -5,6 +5,7 @@
 
 #include <QMainWindow>
 #include <QSplitter>
+#include <QTextEdit>
 
 #include "Canvas.h"
 class NodeScene;
@@ -24,6 +25,7 @@ protected:
 private:
     Canvas *nodeEditorCanvas;
     NodeScene *scene;
+    QTextEdit *textArea;
     QSplitter *windowSplit;
     Renderer *renderer;
     bool toggleRatio = false;

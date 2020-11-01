@@ -32,7 +32,9 @@ HEADERS += \
     MainWindow.h \
     Node.h \
     NodeScene.h \
+    OpCode.h \
     Renderer.h \
+    SceneNode.h \
     Serializable.h \
     Socket.h
 

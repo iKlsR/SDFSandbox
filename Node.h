@@ -7,6 +7,7 @@
 #include <QColor>
 #include "Socket.h"
 
+#include "Edge.h"
 #include "Serializable.h"
 #include "GraphicsNode.h"
 
@@ -19,6 +20,12 @@ public:
     QPoint getPosition();
     void setColor(const QColor &col);
     QColor getColor();
+
+    virtual QPair<QString, QString> eval() {
+        return QPair<QString, QString>();
+    }
+
+    int type;
 
     void setDimensions(QSize size) {
         dimensions = size;
@@ -45,13 +52,14 @@ public:
 
     void setRenderer(GraphicsNode *gNode) {
         graphicsNode = gNode;
-        graphicsNode->setModel(this);
 
         // Maybe the renderer should read properties from the model?
         graphicsNode->setTitle(this->getTitle());
         graphicsNode->setSize(this->getDimensions());
         graphicsNode->setPos(this->getPosition());
         graphicsNode->setColor(this->getColor());
+
+        graphicsNode->setModel(this);
     }
     GraphicsNode *getRenderer() {
         return graphicsNode;
@@ -68,8 +76,10 @@ public:
 
     void addSocket(Socket *socket);
     QPoint getSocketPositionFromLocation(Location location);
-private:
+
+protected:
     QString title;
+    QString variable;
     QPoint pos;
     QColor color;
     QSize dimensions;

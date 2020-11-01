@@ -35,7 +35,6 @@ int main(int argc, char *argv[])
         QFont monospace(family);
         monospace.setStyleStrategy(QFont::PreferAntialias);
         QApplication::setFont(monospace);
-        qDebug() << family;
     }
 #endif
 

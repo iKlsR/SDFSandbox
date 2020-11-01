@@ -17,7 +17,7 @@ public:
     Renderer(QWidget *parent = Q_NULLPTR);
     ~Renderer();
 
-
+    void recompileFragShader(QString slot);
     void update();
 
     void initializeGL() override;
@@ -30,6 +30,7 @@ private:
     QOpenGLBuffer *vertices;
     QOpenGLVertexArrayObject *vao;
     QOpenGLShaderProgram *m_program;
+    QOpenGLShader *frag;
 
     int iResolution;
     qreal u_time;

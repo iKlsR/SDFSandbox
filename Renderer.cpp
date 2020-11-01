@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include <QApplication>
+#include <QFile>
 #include <QTimer>
 
 // float clamp(float value, float lower, float upper) {
@@ -12,12 +13,12 @@ Renderer::Renderer(QWidget *parent) : QOpenGLWidget(parent)
     // similar to GLFW's window hints, we select a profile and set
     // properties on the default surface that opengl will draw to
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
-//    format.setVersion(3, 3);
+//    format.setVersion(4, 1);
     format.setSamples(4);
-//    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-//    format.setRenderableType(QSurfaceFormat::OpenGL);
+    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    format.setRenderableType(QSurfaceFormat::OpenGL);
     format.setProfile(QSurfaceFormat::CoreProfile);
-//    format.setSwapInterval(0);
+    format.setSwapInterval(0);
     setFormat(format);
 
 //    QTimer *timer = new QTimer(this);
@@ -39,6 +40,27 @@ Renderer::Renderer(QWidget *parent) : QOpenGLWidget(parent)
 
 Renderer::~Renderer()
 {
+}
+
+void Renderer::recompileFragShader(QString slot)
+{
+    QFile shaderFile(":/frag.shader");
+    shaderFile.open(QFile::ReadOnly);
+
+    QString shaderBasePlusSlot = QString(shaderFile.readAll()).arg(slot);
+
+//    qDebug() << shaderBasePlusSlot;
+//    m_program->release();
+    m_program->removeShader(frag);
+    delete frag;
+    frag = new QOpenGLShader(QOpenGLShader::Fragment);
+    frag->compileSourceCode(shaderBasePlusSlot);
+
+    m_program->addShader(frag);
+
+//    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, shaderBasePlusSlot);
+//    m_program->link();
+//    m_program->bind();
 }
 
 void Renderer::update()
@@ -84,10 +106,15 @@ void Renderer::initializeGL()
             "col = vec4(color, 1.0); }";
 
       // Create Shader (Do not release until VAO is created)
+
+       frag = new QOpenGLShader(QOpenGLShader::Fragment);
+       frag->compileSourceFile(":/default_frag.shader");
+
       m_program = new QOpenGLShaderProgram();
       m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vshader);
 //      m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fshader);
-      m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/frag.shader");
+//      m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/frag.shader");
+      m_program->addShader(frag);
       m_program->link();
       m_program->bind();
 
