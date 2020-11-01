@@ -4,7 +4,7 @@
 
 GraphicsSocket::GraphicsSocket(GraphicsNode *p) : QGraphicsItem(p), parent(p)
 {
-    radius = 8;
+    radius = 5;
     outlineWidth = 2;
     padding = 2; // Make it easier to select
     setZValue(2);

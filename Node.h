@@ -88,6 +88,7 @@ protected:
 
     GraphicsNode *graphicsNode;
     QString id;
+    QString variablePostFix;
 };
 
 #endif // NODE_H

@@ -17,15 +17,15 @@ float planeSDF(vec3 p) {
     return p.y;
 }
 
-//%1
+%1
 
-float GetDist(vec3 p) {
-    float sphereDist = sphereSDF(p, vec3(0, 1, 6), 1);
-    float planeDist = planeSDF(p);
+//float GetDist(vec3 p) {
+//    float sphereDist = sphereSDF(p, vec3(0, 1, 6), 1);
+//    float planeDist = planeSDF(p);
 
-    float d = min(sphereDist, planeDist);
-    return d;
-}
+//    float d = min(sphereDist, planeDist);
+//    return d;
+//}
 
 float RayMarch(vec3 ro, vec3 rd) {
     float dO = 0.;

@@ -52,7 +52,7 @@ void Renderer::recompileFragShader(QString slot)
 //    qDebug() << shaderBasePlusSlot;
 //    m_program->release();
     m_program->removeShader(frag);
-    delete frag;
+//    delete frag;
     frag = new QOpenGLShader(QOpenGLShader::Fragment);
     frag->compileSourceCode(shaderBasePlusSlot);
 

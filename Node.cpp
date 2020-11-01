@@ -10,6 +10,7 @@ Node::Node(const QString &t) : title(t)
     pos = QPoint(0, 0);
     setDimensions(QSize(100, 100));
     id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    variablePostFix =  id.split("-").first();
 }
 
 void Node::setPosition(int x, int y)

@@ -13,7 +13,6 @@
 #include "SceneNode.h"
 #include "Socket.h"
 
-
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     windowSplit = new QSplitter(Qt::Horizontal, this);
@@ -39,6 +38,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 //    windowSplit->setStretchFactor(0, 2);
 //    windowSplit->setStretchFactor(1, 11);
 
+    auto AA1 = new TimeNode;
+    AA1->setPosition(-800, -120);
+
+    auto AA2 = new SinNode;
+    AA2->setPosition(-600, -120);
+
+    auto A1 = new Vec3Node;
+    A1->setPosition(-400, -100);
+
+    auto A2 = new FloatNode;
+    A2->setPosition(-400, 100);
+
     auto A = new SphereNode;
     A->setPosition(-200, 0);
 
@@ -51,13 +62,25 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     auto D = new OutputNode;
     D->setPosition(200, 0);
 
+    scene->addNode(AA1);
+    scene->addNode(AA2);
+    scene->addNode(A1);
+    scene->addNode(A2);
     scene->addNode(A);
     scene->addNode(B);
     scene->addNode(C);
     scene->addNode(D);
 
+    scene->connectSockets(AA1->getSocketByIndex(Type::OUTO, 0), AA2->getSocketByIndex(Type::INTO, 0));
+
+    scene->connectSockets(AA2->getSocketByIndex(Type::OUTO, 0), A1->getSocketByIndex(Type::INTO, 1));
+
+    scene->connectSockets(A1->getSocketByIndex(Type::OUTO, 0), A->getSocketByIndex(Type::INTO, 0));
+    scene->connectSockets(A2->getSocketByIndex(Type::OUTO, 0), A->getSocketByIndex(Type::INTO, 1));
+
     scene->connectSockets(A->getSocketByIndex(Type::OUTO, 0), C->getSocketByIndex(Type::INTO, 0));
     scene->connectSockets(B->getSocketByIndex(Type::OUTO, 0), C->getSocketByIndex(Type::INTO, 1));
+
     scene->connectSockets(C->getSocketByIndex(Type::OUTO, 0), D->getSocketByIndex(Type::INTO, 0));
 
     setMouseTracking(true);
@@ -117,7 +140,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             QString lastEvaldFunc = master->eval().first;
 
             QString sceneFunc = QString("float GetDist(vec3 p) { %1 return %2; }").arg(code.join(""), lastEvaldFunc);
-            qDebug() << sceneFunc;
+            for (auto line : code) qDebug() << line;
 
             renderer->recompileFragShader(sceneFunc);
         }
