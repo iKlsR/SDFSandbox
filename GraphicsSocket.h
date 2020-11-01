@@ -24,6 +24,11 @@ public:
         index = i;
     }
 
+    int getSocketType() { return socketType; }
+    void setSocketType(int t) {
+        socketType = t;
+    }
+
     GraphicsNode *parent;
 
 private:
@@ -31,6 +36,7 @@ private:
     int outlineWidth;
     int padding;
     int index;
+    int socketType;
 };
 
 #endif // GRAPHICSSOCKET_H

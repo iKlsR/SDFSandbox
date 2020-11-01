@@ -19,6 +19,7 @@ void NodeScene::addNode(Node *node)
         auto graphicsSocket = new GraphicsSocket(node->getRenderer());
         graphicsSocket->setPos(input->getSocketLocalPosition());
         graphicsSocket->setIndex(input->index);
+        graphicsSocket->setSocketType((int)Type::INTO);
         sockets.insert(input->id, input);
     }
 
@@ -26,6 +27,7 @@ void NodeScene::addNode(Node *node)
         auto graphicsSocket = new GraphicsSocket(node->getRenderer());
         graphicsSocket->setPos(output->getSocketLocalPosition());
         graphicsSocket->setIndex(output->index);
+        graphicsSocket->setSocketType((int)Type::OUTO);
         sockets.insert(output->id, output);
     }
 
@@ -39,9 +41,8 @@ void NodeScene::removeNode(Node *node)
 
 void NodeScene::addEdge(Edge *edge)
 {
-    edge->setRenderer(new GraphicsEdge(nullptr));
+    edge->setRenderer(new GraphicsEdge);
     graphicsScene->addItem(edge->getRenderer());
-    edges.append(edge);
 }
 
 QJsonObject NodeScene::serialize()
@@ -86,7 +87,9 @@ NodeScene* NodeScene::deserialize(QJsonObject object, NodeScene *scene)
 
 void NodeScene::removeEdge(Edge *edge)
 {
-
+    edges.removeOne(edge);
+    edge->detachEdgesFromSockets();
+    graphicsScene->removeItem(edge->getRenderer());
 }
 
 void NodeScene::recalculateTargets()
@@ -94,9 +97,22 @@ void NodeScene::recalculateTargets()
 
 }
 
+void NodeScene::disconnectEdgeFromSocket(Edge *E, Socket *S)
+{
+    S->removeEdge(E);
+}
+
 void NodeScene::connectEdgeToSocket(Edge *E, Socket *S)
 {
-    E->B = S;
+    // We always want A to be the output socket and B to be in the input socket
+    // When walking the node tree, the recursive function looks for incoming inputs at the current node (A)
+    if (S->type == Type::INTO) {
+        E->B = S;
+    } else {
+        E->B = S;
+        qSwap(E->A, E->B);
+    }
+
     S->addEdge(E);
     edges.append(E);
 }
@@ -104,7 +120,16 @@ void NodeScene::connectEdgeToSocket(Edge *E, Socket *S)
 void NodeScene::connectSockets(Socket *A, Socket *B)
 {
     auto edge = new Edge(A, B);
-    edge->setRenderer(new GraphicsEdge(nullptr));
+    edge->setRenderer(new GraphicsEdge);
     graphicsScene->addItem(edge->getRenderer());
     edges.append(edge);
+}
+
+void NodeScene::walkTree(Node *node, QStringList &code)
+{
+    if (!node->evaldCode.isNull()) code.prepend(node->evaldCode);
+    foreach (auto input, node->getInputSockets()) {
+        auto incomingNode = input->getImmediateParent();
+        walkTree(incomingNode, code);
+    }
 }

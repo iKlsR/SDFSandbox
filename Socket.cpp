@@ -11,6 +11,11 @@ Socket::Socket(Node *p) : parent(p)
     id = QUuid::createUuid().toString(QUuid::WithoutBraces);
 }
 
+Socket::~Socket()
+{
+    edges.clear();
+}
+
 void Socket::setLocation(Location l)
 {
     location = l;
@@ -51,13 +56,26 @@ void Socket::setLocalSocketPosition(QPoint pos)
 }
 
 bool Socket::hasEdge() {
-//    return edge != nullptr;
-    return edges.count();
+    return !edges.isEmpty();
+}
+
+bool Socket::hasInputEdge()
+{
+    return edges.first();
 }
 
 QPoint Socket::getSocketLocalPosition()
 {
     return socketPosition;
+}
+
+Node *Socket::getImmediateParent()
+{
+    if (hasEdge()) {
+        return getEdges().first()->getOutputSocket()->getParent();
+    }
+
+    return nullptr;
 }
 
 QPoint Socket::getSocketGlobalPosition()

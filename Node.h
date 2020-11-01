@@ -11,6 +11,17 @@
 #include "Serializable.h"
 #include "GraphicsNode.h"
 
+enum NodeType {
+    Time = 0,
+    Sin,
+    Float,
+    Vec3,
+    Sphere,
+    Plane,
+    Min,
+    Out
+};
+
 class Node : public Serializable
 {
 public:
@@ -21,11 +32,34 @@ public:
     void setColor(const QColor &col);
     QColor getColor();
 
-    virtual QPair<QString, QString> eval() {
+    // Any node can be eval'd if all the input sockets have edges and the nodes at those edges can be eva'ld
+    bool canEval() {
+        if (getInputSockets().isEmpty()) return true;
+        for (auto socket : getInputSockets()) {
+            if (!socket->getEdges().isEmpty()) return false;
+            auto parent = socket->getEdges().first()->getOutputSocket()->getParent();
+            if (parent) {
+                if (parent->canEval()) {
+                    return true;
+                }
+                else return false;
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    QString evaldCode;
+
+    QVector<QPair<QString, QString>> code;
+
+    virtual QPair<QString, QString> eval(QStringList &code) {
         return QPair<QString, QString>();
     }
 
-    int type;
+    NodeType type;
 
     void setDimensions(QSize size) {
         dimensions = size;
@@ -37,6 +71,14 @@ public:
 
     QVector<Socket*> getInputSockets();
     QVector<Socket*> getOutputSockets();
+
+    bool allInputsAreValid() {
+        for (auto socket : getInputSockets()) {
+            if (!socket->hasEdge()) return false;
+        }
+
+        return true;
+    }
 
     const QString getTitle();
 
@@ -77,6 +119,7 @@ public:
     void addSocket(Socket *socket);
     QPoint getSocketPositionFromLocation(Location location);
 
+    QString id;
 protected:
     QString title;
     QString variable;
@@ -87,7 +130,6 @@ protected:
     QVector<Socket*> outputs;
 
     GraphicsNode *graphicsNode;
-    QString id;
     QString variablePostFix;
 };
 

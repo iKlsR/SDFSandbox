@@ -2,12 +2,14 @@
 #define NODEEDITORCANVAS_H
 
 #include <QGraphicsView>
+#include <QMenu>
 
 #include "GraphicsScene.h"
 
 enum class NodeOperation {
     NoOp,
     EdgeDrag,
+    EdgeRemove,
     EdgeConnected
 };
 
@@ -20,6 +22,9 @@ class Canvas : public QGraphicsView
 {
     Q_OBJECT
 
+signals:
+    void nodeConnected();
+
 public:
     Canvas(QWidget *parent);
     ~Canvas();
@@ -28,13 +33,15 @@ public:
 //        return this->graphicsScene;
 //    }
 
+
     NodeScene *nodeScene;
     void setNodeScene(NodeScene* ns);
     int getItemAtClick(QMouseEvent *event);
     void edgeDragStart(GraphicsSocket *item);
-    void edgeDragEnd(GraphicsSocket *item);
+    void edgeDragEnd(QMouseEvent *event);
     void clearNodeScene();
 
+    void contextMenuEvent(QContextMenuEvent *event) override;
 protected slots:
     void scalingTime(qreal x);
     void animFinished();
@@ -59,6 +66,7 @@ private:
     NodeOperation nodeOp;
 
     Edge *tempDraggingEdge;
+    QMenu menu;
 };
 
 #endif // CANVAS_H

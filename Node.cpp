@@ -11,6 +11,8 @@ Node::Node(const QString &t) : title(t)
     setDimensions(QSize(100, 100));
     id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     variablePostFix =  id.split("-").first();
+
+    evaldCode = "empty";
 }
 
 void Node::setPosition(int x, int y)
@@ -157,7 +159,10 @@ void Node::updateConnectedEdges()
     foreach (auto socket, inputs + outputs) {
 //        if (socket->hasEdge()) socket->getEdge()->updateWorldPosition();
         foreach (auto edge, socket->getEdges()) {
-            edge->updateWorldPosition();
+            if (edge) {
+//                qDebug() << "Edge" << edge->id;
+                edge->updateWorldPosition();
+            }
         }
     }
 }

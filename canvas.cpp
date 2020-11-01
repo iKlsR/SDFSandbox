@@ -7,6 +7,9 @@
 
 #ifdef QT_DEBUG
     #include <QDebug>
+#include <QGraphicsDropShadowEffect>
+#include <QGraphicsSceneContextMenuEvent>
+#include <QMenu>
 #endif
 
 #include "NodeScene.h"
@@ -14,6 +17,7 @@
 #include "Edge.h"
 #include "Node.h"
 #include "GraphicsEdge.h"
+#include "SceneNode.h"
 
 Canvas::Canvas(QWidget *parent) : QGraphicsView(parent)
 {
@@ -38,6 +42,15 @@ Canvas::Canvas(QWidget *parent) : QGraphicsView(parent)
 
 //    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     nodeOp = NodeOperation::NoOp;
+
+//    menu = QMenu("Context Menu", this);
+    menu.setContextMenuPolicy(Qt::ActionsContextMenu);
+    menu.setStyleSheet(
+        "QMenu { background-color: #1A1A1A; color: #EEE; padding: 0; margin: 0; }"
+        "QMenu::item { background-color: #1A1A1A; padding: 6px 8px; margin: 0; }"
+        "QMenu::item:selected { background-color: #3498db; color: #EEE; padding: 6px 8px; margin: 0; }"
+        "QMenu::item : disabled { color: #555; }"
+    );
 }
 
 Canvas::~Canvas()
@@ -49,6 +62,9 @@ void Canvas::setNodeScene(NodeScene *ns)
 {
     nodeScene = ns;
     setScene(nodeScene->graphicsScene);
+
+    auto masterNode = new OutputNode;
+    ns->addNode(masterNode);
 }
 
 int Canvas::getItemAtClick(QMouseEvent *event)
@@ -58,33 +74,54 @@ int Canvas::getItemAtClick(QMouseEvent *event)
     // https://doc.qt.io/archives/qt-4.8/qgraphicsitem.html#type
     // https://stackoverflow.com/a/23129179
     // We are looking for sockets whose type is UserType + 2
+    // Nodes are UserType + 1 and Edges are UserType + 3
     if (item) return item->type();
     return -1;
 }
 
 void Canvas::edgeDragStart(GraphicsSocket *item)
 {
-    nodeOp = NodeOperation::EdgeDrag;
-//    qDebug() << item->parent->getModel()->getTitle();
-    qDebug() << item->getIndex();
+    auto startingSocket = item->parent->getModel()
+            ->getSocketByIndex(static_cast<Type>(item->getSocketType()), item->getIndex());
 
+    // We are creating if we are dragging from an output socket or an input socket that has no edges
+    bool creating = item->getSocketType() == (int) Type::OUTO || (item->getSocketType() == (int) Type::INTO && !startingSocket->hasEdge());
 
-    auto startingSocket = item->parent->getModel()->getOutputSockets().at(item->getIndex());
-////    auto endSocket = nodeScene->nodes.last()->getInputSockets().first();
-
-    tempDraggingEdge = new Edge(startingSocket, nullptr);
-    tempDraggingEdge->setRenderer(new GraphicsEdge(nullptr));
-    scene()->addItem(tempDraggingEdge->getRenderer());
+    if (creating) {
+        nodeOp = NodeOperation::EdgeDrag;
+        qDebug() << "Starting From" << item->getSocketType() << item->getIndex() << startingSocket->getParent()->getTitle() << startingSocket->getParent()->id;
+        tempDraggingEdge = new Edge(startingSocket, nullptr);
+        nodeScene->addEdge(tempDraggingEdge);
+    }
+    else {
+        nodeOp = NodeOperation::EdgeRemove;
+        qDebug() << "Removing" << item->getSocketType() << item->getIndex() << startingSocket->getParent()->getTitle() << startingSocket->getParent()->id;
+        tempDraggingEdge = startingSocket->getEdges().first();
+    }
 }
 
-void Canvas::edgeDragEnd(GraphicsSocket *item)
+void Canvas::edgeDragEnd(QMouseEvent *event)
 {
-    nodeOp = NodeOperation::NoOp;
-    qDebug() << item;
-//    auto endSocket = nodeScene->nodes.last()->getInputSockets().first();
+    if (getItemAtClick(event) == QGraphicsItem::UserType + 2) {
+        if (nodeOp == NodeOperation::EdgeDrag) {
+            nodeOp = NodeOperation::NoOp;
+            auto graphicsSocket = qgraphicsitem_cast<GraphicsSocket*>(itemAt(event->pos()));
+            auto targetSocket = graphicsSocket->parent->getModel()
+                    ->getSocketByIndex(static_cast<Type>(graphicsSocket->getSocketType()), graphicsSocket->getIndex());
+            nodeScene->connectEdgeToSocket(tempDraggingEdge, targetSocket);
+            emit nodeConnected();
+        }
+    } else {
+        if (nodeOp == NodeOperation::EdgeDrag) {
+            nodeOp = NodeOperation::NoOp;
+            nodeScene->removeEdge(tempDraggingEdge);
+        }
 
-    auto endSocket = item->parent->getModel()->getInputSockets().at(item->getIndex());
-    nodeScene->connectEdgeToSocket(tempDraggingEdge, endSocket);
+        if (nodeOp == NodeOperation::EdgeRemove) {
+            nodeOp = NodeOperation::NoOp;
+            nodeScene->removeEdge(tempDraggingEdge);
+        }
+    }
 }
 
 void Canvas::clearNodeScene()
@@ -103,38 +140,13 @@ void Canvas::mousePressEvent(QMouseEvent *event)
         }
     }
 
-    if (event->button() == Qt::RightButton) {
-        auto pos = mapToScene(event->pos());
-
-        auto node = new Node("Yeet");
-        node->setPosition(pos.x(), pos.y());
-        node->setColor(QColor("#487eb0"));
-        node->addSocket(Type::INTO, Location::LEFT_MIDDLE);
-        node->addSocket(Type::OUTO, Location::RIGHT_MIDDLE);
-//        node->setRenderer(new GraphicsNode);
-
-        nodeScene->addNode(node);
-    }
-
     QGraphicsView::mousePressEvent(event);
 }
 
 void Canvas::mouseReleaseEvent(QMouseEvent *event)
 {
-    // If we don't complete a node edge Dnd then reset nodeOp
     if (event->button() == Qt::LeftButton) {
-        if (getItemAtClick(event) == QGraphicsItem::UserType + 2) {
-            if (nodeOp == NodeOperation::EdgeDrag) {
-                edgeDragEnd(qgraphicsitem_cast<GraphicsSocket*>(itemAt(event->pos())));
-                return;
-            }
-        } else {
-            if (nodeOp == NodeOperation::EdgeDrag) {
-                nodeOp = NodeOperation::NoOp;
-                scene()->removeItem(tempDraggingEdge->getRenderer());
-                return;
-            }
-        }
+        edgeDragEnd(event);
     }
 
     if (event->button() == Qt::MiddleButton) {
@@ -146,13 +158,109 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
 
 void Canvas::mouseMoveEvent(QMouseEvent *event)
 {
-    if (nodeOp == NodeOperation::EdgeDrag) {
-        auto edgeEnd = mapToScene(event->pos()).toPoint();
-        tempDraggingEdge->graphicsEdge->setDest(edgeEnd);
-        tempDraggingEdge->graphicsEdge->update();
+    if (nodeOp == NodeOperation::EdgeDrag || nodeOp == NodeOperation::EdgeRemove) {
+        tempDraggingEdge->getRenderer()->setDest(mapToScene(event->pos()).toPoint());
+        tempDraggingEdge->getRenderer()->update();
     }
 
     QGraphicsView::mouseMoveEvent(event);
+}
+
+void Canvas::contextMenuEvent(QContextMenuEvent *event)
+{
+    menu.setContextMenuPolicy(Qt::ActionsContextMenu);
+    menu.setStyleSheet(
+        "QMenu { background-color: #1A1A1A; color: #EEE; padding: 0; margin: 0; }"
+        "QMenu::item { background-color: #1A1A1A; padding: 6px 8px; margin: 0; }"
+        "QMenu::item:selected { background-color: #3498db; color: #EEE; padding: 6px 8px; margin: 0; }"
+        "QMenu::item : disabled { color: #555; }"
+    );
+
+//    QGraphicsDropShadowEffect dropShadowEffect;
+//    dropShadowEffect.setBlurRadius(20);
+//    dropShadowEffect.setYOffset(4);
+//    dropShadowEffect.setXOffset(0);
+//    dropShadowEffect.setColor(QColor(0, 0, 0, 32));
+
+//    menu.setGraphicsEffect(&dropShadowEffect);
+
+    QAction floatNode("Float", this);
+    QAction vec3Node("Vec3", this);
+    QAction timeNode("Time", this);
+    QAction sphereNode("Sphere", this);
+    QAction planeNode("Plane", this);
+    QAction minNode("Min", this);
+    QAction sinNode("Sin", this);
+    QAction outNode("Out", this);
+
+    QPoint pos = mapToScene(event->pos()).toPoint();
+
+    connect(&floatNode, &QAction::triggered, this, [&]() {
+        auto node = new FloatNode;
+        node->setPosition(pos.x(), pos.y());
+        nodeScene->addNode(node);
+    });
+
+    connect(&vec3Node, &QAction::triggered, this, [&]() {
+        auto node = new Vec3Node;
+        node->setPosition(pos.x(), pos.y());
+        nodeScene->addNode(node);
+    });
+
+    connect(&timeNode, &QAction::triggered, this, [&]() {
+        auto node = new TimeNode;
+        node->setPosition(pos.x(), pos.y());
+        nodeScene->addNode(node);
+    });
+
+    connect(&sphereNode, &QAction::triggered, this, [&]() {
+        auto node = new SphereNode;
+        node->setPosition(pos.x(), pos.y());
+        nodeScene->addNode(node);
+    });
+
+    connect(&planeNode, &QAction::triggered, this, [&]() {
+        auto node = new PlaneNode;
+        node->setPosition(pos.x(), pos.y());
+        nodeScene->addNode(node);
+    });
+
+    connect(&minNode, &QAction::triggered, this, [&]() {
+        auto node = new MinNode;
+        node->setPosition(pos.x(), pos.y());
+        nodeScene->addNode(node);
+    });
+
+    connect(&sinNode, &QAction::triggered, this, [&]() {
+        auto node = new SinNode;
+        node->setPosition(pos.x(), pos.y());
+        nodeScene->addNode(node);
+    });
+
+//    connect(&outNode, &QAction::triggered, this, [&]() {
+//        auto node = new OutputNode;
+//        node->setPosition(pos.x(), pos.y());
+//        nodeScene->addNode(node);
+//    });
+
+    menu.addAction(&floatNode);
+    menu.addAction(&vec3Node);
+    menu.addAction(&timeNode);
+    menu.addAction(&sphereNode);
+    menu.addAction(&planeNode);
+    menu.addAction(&minNode);
+    menu.addAction(&sinNode);
+//    menu.addAction(&outNode);
+
+//    for (auto node : qAsConst(nodeScene->registeredNodes.keys())) {
+//        QAction action;
+//        action.setText(node->);
+//        action->setData(index++);
+
+//        menu.addAction(&action);
+//    }
+
+    menu.exec(event->globalPos());
 }
 
 void Canvas::scalingTime(qreal x)

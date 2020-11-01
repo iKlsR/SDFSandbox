@@ -29,6 +29,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     renderer = new Renderer(this);
 
+    connect(nodeEditorCanvas, &Canvas::nodeConnected, this, &MainWindow::refreshRenderer);
+
     QSizePolicy policy;
     renderer->setSizePolicy(policy);
 //    policy.setHorizontalPolicy(QSizePolicy::Expanding);
@@ -38,50 +40,50 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 //    windowSplit->setStretchFactor(0, 2);
 //    windowSplit->setStretchFactor(1, 11);
 
-    auto AA1 = new TimeNode;
-    AA1->setPosition(-800, -120);
+//    auto AA1 = new TimeNode;
+//    AA1->setPosition(-800, -120);
 
-    auto AA2 = new SinNode;
-    AA2->setPosition(-600, -120);
+//    auto AA2 = new SinNode;
+//    AA2->setPosition(-600, -120);
 
-    auto A1 = new Vec3Node;
-    A1->setPosition(-400, -100);
+//    auto A1 = new Vec3Node;
+//    A1->setPosition(-400, -100);
 
-    auto A2 = new FloatNode;
-    A2->setPosition(-400, 100);
+//    auto A2 = new FloatNode;
+//    A2->setPosition(-400, 100);
 
-    auto A = new SphereNode;
-    A->setPosition(-200, 0);
+//    auto A = new SphereNode;
+//    A->setPosition(-200, 0);
 
-    auto B = new PlaneNode;
-    B->setPosition(-200, 200);
+//    auto B = new PlaneNode;
+//    B->setPosition(-200, 200);
 
-    auto C = new MinNode;
-    C->setPosition(0, 0);
+//    auto C = new MinNode;
+//    C->setPosition(0, 0);
 
-    auto D = new OutputNode;
-    D->setPosition(200, 0);
+//    auto D = new OutputNode;
+//    D->setPosition(200, 0);
 
-    scene->addNode(AA1);
-    scene->addNode(AA2);
-    scene->addNode(A1);
-    scene->addNode(A2);
-    scene->addNode(A);
-    scene->addNode(B);
-    scene->addNode(C);
-    scene->addNode(D);
+//    scene->addNode(AA1);
+//    scene->addNode(AA2);
+//    scene->addNode(A1);
+//    scene->addNode(A2);
+//    scene->addNode(A);
+//    scene->addNode(B);
+//    scene->addNode(C);
+//    scene->addNode(D);
 
-    scene->connectSockets(AA1->getSocketByIndex(Type::OUTO, 0), AA2->getSocketByIndex(Type::INTO, 0));
+//    scene->connectSockets(AA1->getSocketByIndex(Type::OUTO, 0), AA2->getSocketByIndex(Type::INTO, 0));
 
-    scene->connectSockets(AA2->getSocketByIndex(Type::OUTO, 0), A1->getSocketByIndex(Type::INTO, 1));
+//    scene->connectSockets(AA2->getSocketByIndex(Type::OUTO, 0), A1->getSocketByIndex(Type::INTO, 1));
 
-    scene->connectSockets(A1->getSocketByIndex(Type::OUTO, 0), A->getSocketByIndex(Type::INTO, 0));
-    scene->connectSockets(A2->getSocketByIndex(Type::OUTO, 0), A->getSocketByIndex(Type::INTO, 1));
+//    scene->connectSockets(A1->getSocketByIndex(Type::OUTO, 0), A->getSocketByIndex(Type::INTO, 0));
+//    scene->connectSockets(A2->getSocketByIndex(Type::OUTO, 0), A->getSocketByIndex(Type::INTO, 1));
 
-    scene->connectSockets(A->getSocketByIndex(Type::OUTO, 0), C->getSocketByIndex(Type::INTO, 0));
-    scene->connectSockets(B->getSocketByIndex(Type::OUTO, 0), C->getSocketByIndex(Type::INTO, 1));
+//    scene->connectSockets(A->getSocketByIndex(Type::OUTO, 0), C->getSocketByIndex(Type::INTO, 0));
+//    scene->connectSockets(B->getSocketByIndex(Type::OUTO, 0), C->getSocketByIndex(Type::INTO, 1));
 
-    scene->connectSockets(C->getSocketByIndex(Type::OUTO, 0), D->getSocketByIndex(Type::INTO, 0));
+//    scene->connectSockets(C->getSocketByIndex(Type::OUTO, 0), D->getSocketByIndex(Type::INTO, 0));
 
     setMouseTracking(true);
     setFocusPolicy(Qt::ClickFocus);
@@ -134,18 +136,26 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         }
 
         if (keyEvent->key() == Qt::Key_R) {
-            auto master = nodeEditorCanvas->nodeScene->getSceneNode();
-            QStringList code;
-            nodeEditorCanvas->nodeScene->walkTree(master, &code);
-            QString lastEvaldFunc = master->eval().first;
-
-            QString sceneFunc = QString("float GetDist(vec3 p) { %1 return %2; }").arg(code.join(""), lastEvaldFunc);
-            for (auto line : code) qDebug() << line;
-
-            renderer->recompileFragShader(sceneFunc);
+            refreshRenderer();
         }
     }
 
     return QObject::eventFilter(watched, event);
+}
+
+void MainWindow::refreshRenderer()
+{
+    auto master = nodeEditorCanvas->nodeScene->getSceneNode();
+
+    if (!master->getInputSockets().first()->getEdges().count()) {
+        qDebug() << "Connect to the master node";
+        return;
+    }
+
+    QStringList code;
+    QString lastEvaldFunc = master->eval(code).first;
+    QString sceneFunc = QString("float GetDist(vec3 p) { %1 return %2; }").arg(code.join(""), lastEvaldFunc);
+    qDebug() << sceneFunc;
+    renderer->recompileFragShader(sceneFunc);
 }
 

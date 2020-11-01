@@ -5,6 +5,7 @@
 #include <QDebug>
 #include "Serializable.h"
 
+
 class Node;
 class Edge;
 
@@ -25,7 +26,9 @@ enum class Type {
 class Socket : public Serializable
 {
 public:
+    Socket() {}
     Socket(Node *parent);
+    ~Socket();
     void setLocation(Location);
     void setLocalSocketPosition(QPoint);
     QPoint getSocketLocalPosition();
@@ -33,7 +36,7 @@ public:
     Location location;
     Type type;
     int index;
-    Node *parent;
+    Node *parent = nullptr;
     Node *getParent() {
         return parent;
     }
@@ -45,8 +48,19 @@ public:
         return edges;
     }
 
+    Node *getImmediateParent();
+
     QPoint getSocketGlobalPosition();
     bool hasEdge();
+    bool hasInputEdge();
+    void clearEdges() {
+        edges.clear();
+        edges.squeeze();
+    }
+
+    void removeEdge(Edge *e) {
+        edges.removeOne(e);
+    }
     QString id;
 
     QVector<Edge*> edges;

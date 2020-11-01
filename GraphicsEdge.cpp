@@ -3,7 +3,7 @@
 #include <QPainter>
 #include <QDebug>
 
-GraphicsEdge::GraphicsEdge(QGraphicsItem *parent) : QGraphicsPathItem(parent)
+GraphicsEdge::GraphicsEdge() : QGraphicsPathItem()
 {
     defaultOutlinePen = QPen(QColor(255, 255, 255, 150));
     defaultOutlinePen.setWidth(4);
@@ -12,6 +12,11 @@ GraphicsEdge::GraphicsEdge(QGraphicsItem *parent) : QGraphicsPathItem(parent)
     selectedOutlinePen.setWidth(4);
 
     setFlags(QGraphicsItem::ItemIsSelectable);
+}
+
+GraphicsEdge::~GraphicsEdge()
+{
+    qDebug() << "Edge removed";
 }
 
 void GraphicsEdge::updatePath()

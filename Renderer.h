@@ -13,11 +13,13 @@ class Renderer : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
 
+public slots:
+    void recompileFragShader(QString slot);
+
 public:
     Renderer(QWidget *parent = Q_NULLPTR);
     ~Renderer();
 
-    void recompileFragShader(QString slot);
     void update();
 
     void initializeGL() override;

@@ -44,12 +44,13 @@ Renderer::~Renderer()
 
 void Renderer::recompileFragShader(QString slot)
 {
-    QFile shaderFile(":/frag.shader");
+    QFile shaderFile("frag.shader");
     shaderFile.open(QFile::ReadOnly);
 
     QString shaderBasePlusSlot = QString(shaderFile.readAll()).arg(slot);
 
 //    qDebug() << shaderBasePlusSlot;
+
 //    m_program->release();
     m_program->removeShader(frag);
 //    delete frag;

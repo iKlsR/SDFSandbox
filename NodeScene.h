@@ -25,34 +25,22 @@ public:
     void removeNode(Node*);
 
     void addEdge(Edge*);
-    void removeEdge(Edge*);
+    void removeEdge(Edge *);
 
     void connectSockets(Socket*, Socket*);
 
     QGraphicsScene *graphicsScene;
 
+    QMap<NodeType, QString> registeredNodes;
+
     Node *getSceneNode() {
         for (auto node : nodes) {
-            if (node->type == 99) {
-                return node;
-            }
+            if (node->type == NodeType::Out) return node;
         }
         return nullptr;
     }
 
-    void walkTree(Node *node, QStringList *code) {
-        // For every input connected to this node
-        foreach (auto input, node->getInputSockets()) {
-            // Get all the edges
-            foreach (auto edge, input->getEdges()) {
-                // From the edges get the node... repeat
-                auto outputSocket = edge->A;
-                auto incomingNode = outputSocket->parent;
-                code->prepend(incomingNode->eval().second);
-                walkTree(incomingNode, code);
-            }
-        }
-    }
+    void walkTree(Node *node, QStringList &code);
 
     void recalculateTargets();
     void connectEdgeToSocket(Edge *E, Socket *S);
@@ -60,6 +48,7 @@ public:
     virtual QJsonObject serialize() override;
     virtual NodeScene* deserialize(QJsonObject, NodeScene*) override;
 
+    void disconnectEdgeFromSocket(Edge *E, Socket *S);
 private:
     int sceneWidth = 64000;
     int sceneHeight = 64000;

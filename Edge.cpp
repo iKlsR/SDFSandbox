@@ -11,6 +11,11 @@ Edge::Edge()
 
 }
 
+Edge::~Edge()
+{
+
+}
+
 Edge::Edge(Socket *a, Socket *b) : A(a), B(b)
 {
     id = QUuid::createUuid().toString(QUuid::WithoutBraces);

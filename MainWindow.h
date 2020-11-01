@@ -19,6 +19,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void refreshRenderer();
 protected:
     bool eventFilter(QObject*, QEvent*) override;
 

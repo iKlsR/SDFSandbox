@@ -7,7 +7,8 @@
 class GraphicsEdge : public QGraphicsPathItem
 {
 public:
-    GraphicsEdge(QGraphicsItem *parent);
+    GraphicsEdge();
+    ~GraphicsEdge();
 
     enum { Type = UserType + 3 };
     int type() const override {
