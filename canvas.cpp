@@ -115,9 +115,7 @@ void Canvas::edgeDragEnd(QMouseEvent *event)
         if (nodeOp == NodeOperation::EdgeDrag) {
             nodeOp = NodeOperation::NoOp;
             nodeScene->removeEdge(tempDraggingEdge);
-        }
-
-        if (nodeOp == NodeOperation::EdgeRemove) {
+        } else if (nodeOp == NodeOperation::EdgeRemove) {
             nodeOp = NodeOperation::NoOp;
             nodeScene->removeEdge(tempDraggingEdge);
         }
