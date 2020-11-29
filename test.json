@@ -1,0 +1,46 @@
+{
+    "edges": [
+        {
+            "end": "2278c0be-42af-47ed-80b6-92049aeab682",
+            "id": "c511f3f4-a9b2-4c92-a279-d5a62513321e",
+            "start": "531d5605-8e0c-45a7-85bd-fee5c2a1602b"
+        }
+    ],
+    "id": "0a6ec0ad-d958-4ae1-9947-c48720467d65",
+    "nodes": [
+        {
+            "id": "e2651c5c-6fd1-4d92-b63a-5bee81bef9bc",
+            "inputs": [
+                {
+                    "id": "2278c0be-42af-47ed-80b6-92049aeab682",
+                    "index": 0,
+                    "location": 1,
+                    "type": 0
+                }
+            ],
+            "outputs": [
+            ],
+            "pos_x": 0,
+            "pos_y": 0,
+            "title": "Out"
+        },
+        {
+            "id": "59fb8876-ad76-4881-bb28-eddc5848a8f7",
+            "inputs": [
+            ],
+            "outputs": [
+                {
+                    "id": "531d5605-8e0c-45a7-85bd-fee5c2a1602b",
+                    "index": 0,
+                    "location": 4,
+                    "type": 1
+                }
+            ],
+            "pos_x": -229,
+            "pos_y": -54,
+            "title": "Float"
+        }
+    ],
+    "scene_height": 64000,
+    "scene_width": 64000
+}

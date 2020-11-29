@@ -109,6 +109,7 @@ void Canvas::edgeDragEnd(QMouseEvent *event)
             auto targetSocket = graphicsSocket->parent->getModel()
                     ->getSocketByIndex(static_cast<Type>(graphicsSocket->getSocketType()), graphicsSocket->getIndex());
             nodeScene->connectEdgeToSocket(tempDraggingEdge, targetSocket);
+            qDebug() << "Connected to" << graphicsSocket->getSocketType() << graphicsSocket->getIndex() << targetSocket->getParent()->getTitle() << targetSocket->getParent()->id;
             emit nodeConnected();
         }
     } else {
@@ -133,8 +134,9 @@ void Canvas::mousePressEvent(QMouseEvent *event)
         if (getItemAtClick(event) == QGraphicsItem::UserType + 2) {
             if (nodeOp == NodeOperation::NoOp) {
                 edgeDragStart(qgraphicsitem_cast<GraphicsSocket*>(itemAt(event->pos())));
-                return;
             }
+
+//            return;
         }
     }
 
@@ -149,9 +151,9 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
 
     if (event->button() == Qt::MiddleButton) {
         setDragMode(QGraphicsView::NoDrag);
-    } else {
-        QGraphicsView::mouseReleaseEvent(event);
     }
+
+    QGraphicsView::mouseReleaseEvent(event);
 }
 
 void Canvas::mouseMoveEvent(QMouseEvent *event)

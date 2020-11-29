@@ -155,7 +155,7 @@ void MainWindow::refreshRenderer()
     QStringList code;
     QString lastEvaldFunc = master->eval(code).first;
     QString sceneFunc = QString("float GetDist(vec3 p) { %1 return %2; }").arg(code.join(""), lastEvaldFunc);
-    qDebug() << sceneFunc;
+//    qDebug() << sceneFunc;
     renderer->recompileFragShader(sceneFunc);
 }
 

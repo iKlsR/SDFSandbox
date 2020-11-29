@@ -90,6 +90,7 @@ void NodeScene::removeEdge(Edge *edge)
     edges.removeOne(edge);
     edge->detachEdgesFromSockets();
     graphicsScene->removeItem(edge->getRenderer());
+    delete edge->getRenderer();
 }
 
 void NodeScene::recalculateTargets()
