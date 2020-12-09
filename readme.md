@@ -1,3 +1,7 @@
+This is work in progress... very experimental
+
+![](https://i.imgur.com/w9OmpS2.png)
+
 Assorted links
 
 # Event filter shenanigans
